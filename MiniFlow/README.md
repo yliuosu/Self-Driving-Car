@@ -1,3 +1,3 @@
 # The miniflow lab is to help me to understand two concepts at the heart of neural networks - backpropagation and differentiable graphs 
-and make me ready to learn TensorFlow which is one of the most popular open source neural network libraries, 
-built by the team at Google Brain over just the last few years
+#and make me ready to learn TensorFlow which is one of the most popular open source neural network libraries, 
+#built by the team at Google Brain over just the last few years
