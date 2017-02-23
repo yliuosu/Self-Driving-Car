@@ -73,6 +73,31 @@ class Mul(Node):
         self.value = nproduct
         return nproduct
 
+class Linear(Node):
+    def __init__(self, X, W, b):
+        # Notice the ordering of the input nodes passed to the
+        # Node constructor.
+        Node.__init__(self, [X, W, b])
+
+    def forward(self):
+        """
+        Set the value of this node to the linear transform output.
+        Your code goes here!
+        X = self.inbound_nodes[0].value
+        W = self.inbound_nodes[1].value
+        b = self.inbound_nodes[2].value
+        Z = np.dot(W,X);
+        Z[0,:] = Z[0,:] + np.transpose(b);
+        Z[1,:] = Z[1,:] + np.transpose(b);"""
+    
+        X = self.inbound_nodes[0].value
+        W = self.inbound_nodes[1].value
+        b = self.inbound_nodes[2].value
+        # use matrix/vector broadcast to add 
+        # b directly to the dot production results
+        self.value = np.dot(X, W) + b
+
+        return self.value
 
 def topological_sort(feed_dict):
     """
