@@ -1,32 +1,59 @@
 import numpy as np
 
 class Node(object):
+	"""
+    Base class for nodes in the network.
+    Arguments:
+        `inbound_nodes`: A list of nodes with edges into this node.
+    """
     def __init__(self, inbound_nodes=[]):
-        # Nodes from which this Node receives values
+		"""
+        Node's constructor (runs when the object is instantiated). Sets
+        properties that all nodes need.
+        """
+        # A list of nodes with edges into this node.
         self.inbound_nodes = inbound_nodes
-        # Nodes to which this Node passes values
+        # A list of nodes that this node outputs to.
         self.outbound_nodes = []
-        # A calculated value
+        # The eventual value of this node. Set by running
+        # the forward() method.
         self.value = None
-        # Add this node as an outbound node on its inputs.
-        for n in self.inbound_nodes:
-            n.outbound_nodes.append(self)
+		# New property! Keys are the inputs to this node and
+        # their values are the partials of this node with
+        # respect to that input.
+        self.gradients = {}
+        # Sets this node as an outbound node for all of
+        # this node's inputs.
+        for node in inbound_nodes:
+            node.outbound_nodes.append(self)
 
     # These will be implemented in a subclass.
     def forward(self):
         """
         Forward propagation.
-
-        Compute the output value based on `inbound_nodes` and
-        store the result in self.value.
+		Every node that uses this class as a base class will
+        need to define its own `forward` method.
         """
         raise NotImplemented
+		
+	def backward(self):
+        """
+        Every node that uses this class as a base class will
+        need to define its own `backward` method.
+        """
+        raise NotImplementedError
 
 
 class Input(Node):
+	"""
+    A generic input into the network.
+    """
     def __init__(self):
-        # an Input node has no inbound nodes,
-        # so no need to pass anything to the Node instantiator
+        # The base class constructor has to run to set all
+        # the properties here.
+        #
+        # The most important property on an Input is value.
+        # self.value is set during `topological_sort` later.
         Node.__init__(self)
 
     # NOTE: Input node is the only node that may
@@ -41,6 +68,17 @@ class Input(Node):
     def forward(self, value=None):
         if value is not None:
             self.value = value
+	
+	def backward(self):
+        # An Input node has no inputs so the gradient (derivative)
+        # is zero.
+        # The key, `self`, is reference to this object.
+        self.gradients = {self: 0}
+        # Weights and bias may be inputs, so you need to sum
+        # the gradient from output gradients.
+        for n in self.outbound_nodes:
+            grad_cost = n.gradients[self]
+            self.gradients[self] += grad_cost * 1
 
 
 class Add(Node):
@@ -98,6 +136,25 @@ class Linear(Node):
         self.value = np.dot(X, W) + b
 
         return self.value
+	
+	def backward(self):
+        """
+        Calculates the gradient based on the output values.
+        """
+        # Initialize a partial for each of the inbound_nodes.
+        self.gradients = {n: np.zeros_like(n.value) for n in self.inbound_nodes}
+        # Cycle through the outputs. The gradient will change depending
+        # on each output, so the gradients are summed over all outputs.
+        for n in self.outbound_nodes:
+            # Get the partial of the cost with respect to this node.
+            grad_cost = n.gradients[self]
+            # Set the partial of the loss with respect to this node's inputs.
+            self.gradients[self.inbound_nodes[0]] += np.dot(grad_cost, self.inbound_nodes[1].value.T)
+            # Set the partial of the loss with respect to this node's weights.
+            self.gradients[self.inbound_nodes[1]] += np.dot(self.inbound_nodes[0].value.T, grad_cost)
+            # Set the partial of the loss with respect to this node's bias.
+            self.gradients[self.inbound_nodes[2]] += np.sum(grad_cost, axis=0, keepdims=False)
+
 
 def topological_sort(feed_dict):
     """
