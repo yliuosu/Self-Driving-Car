@@ -4,12 +4,17 @@ import cv2
 import csv
 
 from keras.models import Sequential
-from keras.layers import Flatten, Dense
+from keras.layers.core import Dense, Activation, Flatten, Dropout, Lambda
+from keras.layers.convolutional import Convolution2D, Cropping2D
+from keras.layers.pooling import MaxPooling2D
 
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
+import matplotlib.pyplot as plt
+import time
 
-#load training data
+
+#load logging data
 lines = []
 with open('./Data/driving_log.csv') as csvfile:
 	reader = csv.reader(csvfile)
@@ -17,9 +22,12 @@ with open('./Data/driving_log.csv') as csvfile:
 		lines.append(line)
 		#print(line)
 
+# buffers to store the original images and steering angles		
 images = []
 measurements = []
 
+
+# only load the center camera data
 for line in lines:
 	source_path = line[0]
 	filename = source_path.split('/')[-1]
@@ -31,23 +39,7 @@ for line in lines:
 	measurement = line[3]
 	measurements.append(measurement)
 
-print(len(measurements))
-print(len(images))
 
-x_train = np.asarray(images)
-y_train = np.asarray(measurements)
-
-print(x_train.shape)
-print(y_train.shape)
-
-model = Sequential()
-model.add(Flatten(input_shape=(160,320,3)))
-model.add(Dense(1))
-
-model.compile(loss='mse', optimizer = 'adam')
-model.fit(x_train, y_train, validation_split = 0.2, shuffle = True)
-
-model.save('model.h5')
 
 
 
