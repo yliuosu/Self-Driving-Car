@@ -26,7 +26,7 @@ with open('./Data/driving_log.csv') as csvfile:
 images = []
 measurements = []
 
-
+'''
 # only load the center camera data
 for line in lines:
 	source_path = line[0]
@@ -38,6 +38,24 @@ for line in lines:
 	images.append(image)
 	measurement = line[3]
 	measurements.append(measurement)
+'''
+
+#load all center left and right camera data
+for line in lines:
+    for i in range(3):
+        source_path = line[i]
+        filename = source_path.split('/')[-1]
+        current_path = './Data/IMG/' + filename
+        #print(current_path)
+        image = cv2.imread(current_path)
+        #print(image)
+        images.append(image)
+	# correction angle for the left and right camera data
+    correction = 0.25
+    measurement = float(line[3])
+    measurements.append(measurement)
+    measurements.append(measurement + correction)
+    measurements.append(measurement - correction)
 
 
 
