@@ -57,6 +57,24 @@ for line in lines:
     measurements.append(measurement + correction)
     measurements.append(measurement - correction)
 
+# augment the original input dataset by flipping 
+# the original image and adjust the correspoding steering angle
+augmented_images = []
+augmented_measurements = []
+for image, measurement in zip(images, measurements):
+    augmented_images.append(image)
+    augmented_measurements.append(measurement)
+    flipped_image = cv2.flip(image, 1)
+    #print(measurement)
+    flipped_measurement = measurement * (-1.0)
+    #print(measurement)
+    #print(flipped_measurement)
+    augmented_images.append(flipped_image)
+    augmented_measurements.append(flipped_measurement)
+	
+x_train = np.array(augmented_images)
+y_train = np.array(augmented_measurements)
+
 
 
 
