@@ -75,6 +75,28 @@ for image, measurement in zip(images, measurements):
 x_train = np.array(augmented_images)
 y_train = np.array(augmented_measurements)
 
+# in order to have a better understanding of the label data 
+# display the distribution of the label data
+fig, ax = plt.subplots(figsize=(15,5))
+ax.hist(y_train, bins = 40, label='steering')
+ax.set_xlabel('Steering Angle')
+ax.set_ylabel('Number of Frames')
+plt.show()
+
+# crop the image by removing the top 63 lines and bottom 25 lines of data
+# because those lines of data don't reflect the shape of the road 
+frame_index = np.random.randint(1, x_train.shape[0] + 1)
+image = x_train[frame_index]
+fig = plt.figure(figsize=(25,25))
+ax = fig.add_subplot(1, 2, 1)
+ax.set_xlabel('Original Image')
+plt.imshow(cv2.cvtColor(image,cv2.COLOR_BGR2RGB))
+cropped_image = image[63:-25,:,:]
+ax = fig.add_subplot(1, 2, 2)
+ax.set_xlabel('Cropped Image')
+plt.imshow(cv2.cvtColor(flipped_image,cv2.COLOR_BGR2RGB))
+plt.show()
+
 
 
 
