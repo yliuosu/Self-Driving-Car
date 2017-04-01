@@ -97,6 +97,31 @@ ax.set_xlabel('Cropped Image')
 plt.imshow(cv2.cvtColor(flipped_image,cv2.COLOR_BGR2RGB))
 plt.show()
 
+'''
+# first training model a single layer network
+model = Sequential()
+model.add(Flatten(input_shape=(160,320,3)))
+model.add(Dense(1))
+'''
+
+'''
+# second training model a Lenet 5 network
+model = Sequential()
+#normalize the image data to -1 to 1
+model.add(Lambda(lambda x: (x / 127.5) - 1, input_shape=(160,320,3)))
+model.add(Convolution2D(32, 5, 5, input_shape=(160, 320, 3)))
+model.add(MaxPooling2D((2, 2)))
+model.add(Activation('relu'))
+model.add(Convolution2D(64, 5, 5))
+model.add(MaxPooling2D((2, 2)))
+model.add(Activation('relu'))
+model.add(Flatten())
+model.add(Dense(128))
+model.add(Activation('relu'))
+model.add(Dropout(0.6))
+model.add(Dense(1))
+'''
+
 
 
 
