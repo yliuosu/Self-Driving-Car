@@ -121,6 +121,25 @@ model.add(Activation('relu'))
 model.add(Dropout(0.6))
 model.add(Dense(1))
 '''
+# thrid training model learn from the 
+# learn from NVIDIA’s self-driving car
+# https://devblogs.nvidia.com/parallelforall/deep-learning-self-driving-cars/
+model = Sequential()
+#normalize the image data to -0.5 to 0.5
+model.add(Lambda(lambda x: (x / 255) - 0.5, input_shape=(160,320,3)))
+model.add(Cropping2D(cropping=((63,25),(0,0))))
+model.add(Convolution2D(24, 5, 5, subsample = (2,2), activation='relu'))
+model.add(Convolution2D(36, 5, 5, subsample = (2,2), activation='relu'))
+model.add(Convolution2D(48, 5, 5, subsample = (2,2), activation='relu'))
+model.add(Convolution2D(64, 3, 3, activation='relu'))
+model.add(Convolution2D(64, 3, 3, activation='relu'))
+model.add(Flatten())
+model.add(Dense(100))
+model.add(Dropout(0.75))
+model.add(Dense(50))
+model.add(Dropout(0.75))
+model.add(Dense(10))
+model.add(Dense(1))
 
 
 
