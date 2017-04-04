@@ -141,6 +141,18 @@ model.add(Dropout(0.75))
 model.add(Dense(10))
 model.add(Dense(1))
 
+# use mean-squared error to calculate the loss
+# use adam to train the model
+model.compile(loss='mse', optimizer = 'adam', metrics=['accuracy'])
+# calculate the training time
+t0 = time.time()
+# split the whole data to train dataset 80% and validation dataset 20%
+# shuffle the dataset for each epoch of training
+# train the network in three epochs
+history = model.fit(x_train, y_train, validation_split = 0.2, shuffle = True, nb_epoch = 10)
+t1 = time.time() 
+print("Time: %.3f seconds" % (t1 - t0))
+
 
 
 
