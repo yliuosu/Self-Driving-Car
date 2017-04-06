@@ -153,6 +153,28 @@ history = model.fit(x_train, y_train, validation_split = 0.2, shuffle = True, nb
 t1 = time.time() 
 print("Time: %.3f seconds" % (t1 - t0))
 
+print(history.history)
+# summarize history for accuracy
+plt.plot(history.history['acc'])
+plt.plot(history.history['val_acc'])
+plt.title('model accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+plt.show()
+# summarize history for loss
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('model loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+plt.show()
+
+
+# save the model
+model.save('11model.h5')
+
 
 
 
