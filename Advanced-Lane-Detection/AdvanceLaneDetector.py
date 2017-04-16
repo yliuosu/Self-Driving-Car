@@ -44,6 +44,24 @@ for idx, fname in enumerate(cal_images):
 # Do camera calibration given object points and image points
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, img_size, None, None)
 
+# Save the camera calibration result for later use
+#dist_pickle = {}
+#dist_pickle["mtx"] = mtx
+#dist_pickle["dist"] = dist
+#pickle.dump( dist_pickle, open( "camera_cal/wide_dist_pickle.p", "wb" ) )
+
+# read in the saved camera calibration parameters
+'''
+def load_cal_parameters(fname):
+    #dist_pickle = pickle.load( open( "camera_cal/wide_dist_pickle.p", "rb" ) )
+    dist_pickle = pickle.load( open( fname, "rb" ) )
+    mtx = dist_pickle["mtx"]
+    dist = dist_pickle["dist"]
+    return mtx, dist
+
+mtx, dist = load_cal_parameters('camera_cal/wide_dist_pickle.p')
+'''
+
 
     
 
