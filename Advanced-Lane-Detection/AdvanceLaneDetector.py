@@ -62,6 +62,42 @@ def load_cal_parameters(fname):
 mtx, dist = load_cal_parameters('camera_cal/wide_dist_pickle.p')
 '''
 
+# Test undistortion on a corners detected chessboard image
+img = cv2.imread('camera_cal/corners_found1.jpg')
+# img_size = (img.shape[1], img.shape[0])
+
+dst = cv2.undistort(img, mtx, dist, None, mtx)
+#cv2.imwrite('camera_cal/test_undist1.jpg',dst)
+
+# Visualize undistortion
+dst = cv2.cvtColor(dst, cv2.COLOR_BGR2RGB)
+f, (ax1, ax2) = plt.subplots(1, 2, figsize=(20,10))
+ax1.imshow(img)
+ax1.set_title('Original Image', fontsize=30)
+ax2.imshow(dst)
+ax2.set_title('Undistorted Image', fontsize=30)
+
+# function to perform the camera calibration, image distortion correction and 
+# returns the undistorted image
+def cal_undistort(img, mtx, dist):
+    dst = cv2.undistort(img, mtx, dist, None, mtx)
+    return dst
+
+# Make a list of test images
+test_images = glob.glob('test_images/*.jpg')
+
+# Step through the testing list and display the original and the un-distorted image
+for idx, fname in enumerate(test_images):
+    img = cv2.imread(fname)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img_size = (img.shape[1], img.shape[0])
+    
+    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(20,10))
+    ax1.imshow(img)
+    ax1.set_title('Original Image', fontsize=30)
+    undis_img = cal_undistort(img, mtx , dist)
+    ax2.imshow(undis_img)
+    ax2.set_title('Undistorted Image', fontsize=30)
 
     
 
