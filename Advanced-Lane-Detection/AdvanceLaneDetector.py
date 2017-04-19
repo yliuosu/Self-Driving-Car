@@ -158,6 +158,43 @@ def gradient_select(img):
     # edges[((gradient_x == 1) & (gradient_y == 1) & (gradient_direction == 1) & (gradient_mag == 1))] = 1
     edges[((gradient_x == 1)& (gradient_mag == 1))& (gradient_direction == 1)] = 1
     return edges
+	
+# define a function that thresholds the S-channel of HLS
+def hls_select(img, thresh_min=0, thresh_max=255):
+    hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
+    s_channel = hls[:,:,2]
+    binary_output = np.zeros_like(s_channel)
+    binary_output[(s_channel > thresh_min) & (s_channel <= thresh_max)] = 1
+    return binary_output
+
+# select the subarea where lane lines are most likely located in
+def area_select(img):
+    img_size = (img.shape[1], img.shape[0])
+    #print(img.shape[1])
+	
+	# define the 4 corners of the subarea
+    left_bottom = [0.0*img_size[0], img_size[1]-1]
+    left_top = [0.45*img_size[0], 0.6*img_size[1]]
+    right_top = [0.55*img_size[0], 0.6*img_size[1]]
+    right_bottom = [1*img_size[0], img_size[1]-1]
+    
+	# define the 4 boundaries of the subarea
+    left_boundary = np.polyfit((left_bottom[0], left_top[0]), (left_bottom[1], left_top[1]), 1)
+    top_boundary = np.polyfit((left_top[0], right_top[0]), (left_top[1], right_top[1]), 1)
+    right_boundary = np.polyfit((right_top[0], right_bottom[0]), (right_top[1], right_bottom[1]), 1)
+    bottom_boundary = np.polyfit((left_bottom[0], right_bottom[0]), (left_bottom[1], right_bottom[1]), 1)
+    
+    # select the region inside the boundaries
+    XX, YY = np.meshgrid(np.arange(0, img_size[0]), np.arange(0, img_size[1]))
+    region_thresholds = (YY > (XX*left_boundary[0] + left_boundary[1])) & \
+                        (YY > (XX*top_boundary[0] + top_boundary[1])) & \
+                        (YY > (XX*right_boundary[0] + right_boundary[1])) & \
+                        (YY < (XX*bottom_boundary[0] + bottom_boundary[1]))
+                
+    lane_area =np.zeros_like(img)
+    lane_area[region_thresholds & (img==1)]=1
+	
+    return lane_area 
 
     
 
