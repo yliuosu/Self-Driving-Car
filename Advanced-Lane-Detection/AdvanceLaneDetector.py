@@ -99,6 +99,66 @@ for idx, fname in enumerate(test_images):
     ax2.imshow(undis_img)
     ax2.set_title('Undistorted Image', fontsize=30)
 
+# function that takes an image to threshold it according to the min / max gradient values
+def abs_sobel_thresh(img, orient='x', sobel_kernel=3, thresh_min=0, thresh_max=255):
+    # Apply x or y gradient with the OpenCV Sobel() function
+    # and take the absolute value
+    if orient == 'x':
+        abs_sobel = np.absolute(cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=sobel_kernel))
+    if orient == 'y':
+        abs_sobel = np.absolute(cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=sobel_kernel))
+    # Rescale back to 8 bit integer
+    scaled_sobel = np.uint8(255*abs_sobel/np.max(abs_sobel))
+    # Create a copy and apply the threshold
+    binary_output = np.zeros_like(scaled_sobel)
+    # use inclusive (>=, <=) thresholds, but exclusive is ok too
+    binary_output[(scaled_sobel >= thresh_min) & (scaled_sobel <= thresh_max)] = 1
+    return binary_output
+
+# function that takes an image to threshold it according to the min / max magnitude of the gradient
+def mag_thresh(img, sobel_kernel=3, thresh_min=0, thresh_max=255):
+    # Take both Sobel x and y gradients
+    sobelx = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=sobel_kernel)
+    sobely = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=sobel_kernel)
+    # Calculate the gradient magnitude
+    gradmag = np.sqrt(sobelx**2 + sobely**2)
+    # Rescale to 8 bit
+    scale_factor = np.max(gradmag)/255 
+    gradmag = (gradmag/scale_factor).astype(np.uint8) 
+    # Create a binary image of ones where threshold is met, zeros otherwise
+    binary_output = np.zeros_like(gradmag)
+    binary_output[(gradmag >= thresh_min) & (gradmag <= thresh_max)] = 1
+    return binary_output
+
+# function that takes an image to threshold it according to the min / max direction of the gradient
+def dir_threshold(img, sobel_kernel=3, thresh_min=0, thresh_max=np.pi/2):
+    # Calculate the x and y gradients
+    sobelx = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=sobel_kernel)
+    sobely = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=sobel_kernel)
+    # Take the absolute value of the gradient direction, 
+    # apply a threshold, and create a binary image result
+    absgraddir = np.arctan2(np.absolute(sobely), np.absolute(sobelx))
+    binary_output =  np.zeros_like(absgraddir)
+    binary_output[(absgraddir >= thresh_min) & (absgraddir <= thresh_max)] = 1
+    # Return the binary image
+    return binary_output
+
+# define a gradient selection function by using multiple different gradient threshold functions
+def gradient_select(img):
+    # Convert to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    kernel_size = 9
+    gradient_x = abs_sobel_thresh(gray, orient='x', sobel_kernel=kernel_size, thresh_min=15,  thresh_max = 255)
+    #gradient_y = abs_sobel_thresh(gray, orient='y', sobel_kernel=kernel_size, thresh_min=15, thresh_max = 255)
+    gradient_mag = mag_thresh(gray, sobel_kernel=kernel_size, thresh_min=60,thresh_max = 255)
+    gradient_direction = dir_threshold(gray, sobel_kernel=kernel_size, thresh_min=0.12*np.pi/2, thresh_max = 0.80*np.pi/2)
+    edges = np.zeros_like(gray)
+	# not use the grad threshold from the y direction because most of time lane lines 
+	# have good detection results from the x direction
+    # edges[((gradient_x == 1) & (gradient_y == 1) & (gradient_direction == 1) & (gradient_mag == 1))] = 1
+    edges[((gradient_x == 1)& (gradient_mag == 1))& (gradient_direction == 1)] = 1
+    return edges
+
     
 
 
