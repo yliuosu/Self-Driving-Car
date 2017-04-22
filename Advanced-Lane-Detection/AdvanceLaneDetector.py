@@ -201,6 +201,35 @@ def bird_eye(img, src_pts, dst_pts):
     warp_matrix = cv2.getPerspectiveTransform(src_pts,dst_pts)
     warped=cv2.warpPerspective(img, warp_matrix, img.shape[::-1],flags=cv2.INTER_LINEAR)
     return warped, warp_matrix
+	
+# Find the boundary of the lane lines
+# wdw_dx: the width of the windows +/- margin
+# wdw_dy: the height of the windows +/- margin, using 720/80 = 9 sliding windows 
+def find_lane(img, x_init_pos, wdw_dx=120, wdw_dy= 80):
+    img_size = (img.shape[1], img.shape[0])
+    windowed=np.zeros_like(img)
+    # start the search from peak
+    x_mean=x_init_pos
+    for y in range(img_size[1], 0, -wdw_dy):
+        wdw=img[y-wdw_dy:y,x_mean-wdw_dx:x_mean+wdw_dx].copy()
+        windowed[y-wdw_dy:y,x_mean-wdw_dx:x_mean+wdw_dx]=wdw.copy()
+        # Calculate new mean of x
+        histogram = np.sum(wdw, axis=0)
+        if (np.sum(histogram)!=0): # found pixels, update the mean location        
+            x_mean=x_mean-wdw_dx+np.argmax(histogram)
+            # print(histogram)
+            # print(x_init_pos, np.argmax(histogram), x_mean) 
+    return windowed
+
+# Detect the left and right lane pixels
+def find_lane_boundary(img, left_start_point, right_start_point):
+    img_size = (img.shape[1], img.shape[0])
+    x_center=int(img_size[0]/2)
+    # mask the bottom centre area 
+    img[img_size[1]-100:img_size[1], x_center-150:x_center+150]=0        
+    left_lane=find_lane(img, left_start_point)
+    right_lane=find_lane(img, right_start_point)
+    return left_lane, right_lane 
 
     
 
