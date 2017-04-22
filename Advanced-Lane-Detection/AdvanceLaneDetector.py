@@ -230,6 +230,33 @@ def find_lane_boundary(img, left_start_point, right_start_point):
     left_lane=find_lane(img, left_start_point)
     right_lane=find_lane(img, right_start_point)
     return left_lane, right_lane 
+	
+# used their x and y pixel positions to fit a second order polynomial curve
+# used lane pixel positions to fit a second order polynomial curve
+def fit_polynomial(lane_img):
+    img_size = (img.shape[1], img.shape[0])
+    y = np.linspace(0, img_size[1], num=img_size[1])
+    # Get the x,y indexes with non-zero elements i.e. white lines
+    ally,allx=np.nonzero(lane_img)
+    # Polynomial fitting
+    fit=np.polyfit(ally,allx,2)
+    recent_xfitted = fit[0]*y**2 + fit[1]*y + fit[2]
+    y_bottom=img_size[1]-1
+    line_base_pos = fit[0]*y_bottom**2 + fit[1]*y_bottom + fit[2]
+    '''
+    print("polynomial", fit)
+    print("base pos ", line_base_pos)
+    # Plt on graph
+    plt.plot(allx, ally, '.', color='white')
+    plt.plot(recent_xfitted, y, color='red', linewidth=3)
+    plt.xlim(0, 1280)
+    plt.ylim(0, 720)
+    ax = plt.gca()
+    ax.set_axis_bgcolor('black')
+    plt.gca().invert_yaxis()
+    plt.show()
+    '''
+    return allx, ally, fit, line_base_pos
 
     
 
