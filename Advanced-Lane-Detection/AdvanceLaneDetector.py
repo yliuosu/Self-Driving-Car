@@ -257,6 +257,13 @@ def fit_polynomial(lane_img):
     plt.show()
     '''
     return allx, ally, fit, line_base_pos
+	
+# calculate the radius of curvature:
+def calc_curvature(lane_img, ally, allx, xm_per_pix, ym_per_pix):
+    # Curvature
+    y_eval=lane_img.shape[0]
+    fit_cr=np.polyfit(ally*ym_per_pix,allx*xm_per_pix,2)
+    return ((1 + (2*fit_cr[0]*y_eval + fit_cr[1])**2)**1.5)/np.absolute(2*fit_cr[0])
 
     
 
