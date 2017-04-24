@@ -265,6 +265,26 @@ def calc_curvature(lane_img, ally, allx, xm_per_pix, ym_per_pix):
     fit_cr=np.polyfit(ally*ym_per_pix,allx*xm_per_pix,2)
     return ((1 + (2*fit_cr[0]*y_eval + fit_cr[1])**2)**1.5)/np.absolute(2*fit_cr[0])
 
+# warp the detected lane boundaries back onto the original image
+def fill_poly_unwarp(img, warped, warp_matrix, left_fit, right_fit):
+    img_size = (img.shape[1], img.shape[0])
+    y = np.linspace(0, img_size[1], num=img_size[1])
+    left_fitted_curve = left_fit[0]*y**2 + left_fit[1]*y + left_fit[2]
+    right_fitted_curve = right_fit[0]*y**2 + right_fit[1]*y + right_fit[2]    
+    warp_zero = np.zeros_like(warped).astype(np.uint8)
+    color_warp = np.dstack((warp_zero, warp_zero, warp_zero))	
+    pts_left = np.array([np.transpose(np.vstack([left_fitted_curve, y]))])
+    pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fitted_curve, y])))])	
+    pts = np.hstack((pts_left, pts_right))
+    # Draw the lane onto the warped blank image
+    cv2.fillPoly(color_warp, np.int_([pts]), ( 0,255, 0))
+    # Warp the blank back to original image space using inverse perspective matrix (Minv)
+    Minv=np.linalg.inv(warp_matrix)
+    newwarp = cv2.warpPerspective(color_warp, Minv, (img.shape[1], img.shape[0])) 
+    # Combine the result with the original image
+    result = cv2.addWeighted(img, 1, newwarp, 0.3, 0)
+    return result
+
     
 
 
