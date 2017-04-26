@@ -265,7 +265,7 @@ def calc_curvature(lane_img, ally, allx, xm_per_pix, ym_per_pix):
     fit_cr=np.polyfit(ally*ym_per_pix,allx*xm_per_pix,2)
     return ((1 + (2*fit_cr[0]*y_eval + fit_cr[1])**2)**1.5)/np.absolute(2*fit_cr[0])
 
-# warp the detected lane boundaries back onto the original image
+# wrap the detected lane boundaries back onto the original image
 def fill_poly_unwarp(img, warped, warp_matrix, left_fit, right_fit):
     img_size = (img.shape[1], img.shape[0])
     y = np.linspace(0, img_size[1], num=img_size[1])
@@ -283,6 +283,83 @@ def fill_poly_unwarp(img, warped, warp_matrix, left_fit, right_fit):
     newwarp = cv2.warpPerspective(color_warp, Minv, (img.shape[1], img.shape[0])) 
     # Combine the result with the original image
     result = cv2.addWeighted(img, 1, newwarp, 0.3, 0)
+    return result
+
+def lane_detection(img, mtx, dist):
+    img_size = (img.shape[1], img.shape[0])
+    
+    # distortion correction
+    undis_img = cal_undistort(img, mtx, dist)
+    # plt.imshow(undis_img)
+    # plt.show()
+  
+    # color/gradient threshold
+    color_binary = hls_select(undis_img, thresh_min=100,thresh_max = 255)
+    # plt.imshow(color_binary, cmap='gray')
+    # plt.show()
+    
+	# gradient selection
+    gradient_binary = gradient_select(undis_img)
+    # plt.imshow(gradient_binary, cmap='gray')
+    # plt.show()
+    
+    # combine gradient and color thresholds
+    color_gradient_binary = np.zeros_like(color_binary)
+    color_gradient_binary[(gradient_binary==1) | (color_binary==1)]=1
+    # plt.imshow(color_gradient_binary, cmap='gray')
+    # plt.show()
+    
+    area_binary=area_select(color_gradient_binary)
+    #plt.imshow(area_binary, cmap='gray')
+    #plt.show()
+    
+    # define 4 source points 
+    src_pts=np.array([[270, img_size[1]], [450, 575], [925, 575], [1180, img_size[1]]],np.int32)
+    # define 4 destination points 
+    dst_pts=np.array([[285, img_size[1]], [285, 0.85* img_size[1]], [995,0.85*img_size[1]], [995,img_size[1]]], np.int32)
+    # perspective transform
+    warped, m =bird_eye(area_binary, np.float32(src_pts), np.float32(dst_pts))
+    #plt.imshow(warped, cmap='gray')
+    #plt.show()
+    
+    # detect lane lines
+    detected_left_lane,detected_right_lane=find_lane_boundary(warped, dst_pts[0][0],dst_pts[3][0])
+    #plt.imshow(detected_left_lane,cmap='gray')
+    #plt.show()
+    #plt.imshow(detected_right_lane,cmap='gray')
+    #plt.show()
+    
+    combine_lanes=cv2.addWeighted(detected_left_lane,1,detected_right_lane,1,0)
+
+    # determine the lane curvature  allx_l, ally_l, fit_l, line_base_pos_l
+    allx_l, ally_l, fit_l, line_base_pos_l = fit_polynomial(detected_left_lane)
+    allx_r, ally_r, fit_r, line_base_pos_r = fit_polynomial(detected_right_lane)
+    
+    # Calculate the position of car relative to lane center
+    # Define conversions in from pixels space to meters
+	# meters per pixel in y dimension
+    ym_per_pix = 30/720 
+    lane_width_m = 3.7
+	# meters per pixel in x dimension
+    xm_per_pix = lane_width_m/(line_base_pos_r-line_base_pos_l)
+    #print ("calculated x ratio:", xm_per_pix) 
+    car_center=img.shape[1]/2
+    lane_center=(line_base_pos_l + line_base_pos_r)/2   
+    lane_offset=xm_per_pix*(car_center-lane_center)
+        
+    curvature_l = calc_curvature(detected_left_lane, ally_l, allx_l, xm_per_pix, ym_per_pix)
+    curvature_r= calc_curvature(detected_right_lane, ally_l, allx_l, xm_per_pix, ym_per_pix)
+    curverad =np.minimum(curvature_l, curvature_r)
+    
+    result=fill_poly_unwarp(undis_img, warped, m, fit_l, fit_r)
+    cv2.putText(result, "Radius of Curvature: "+str(int(curverad))+" m", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255,255,255), 2)
+    if lane_offset>0:
+        side="right"
+    else:
+        side="left"
+    cv2.putText(result, "Vehicle is driving "+" %0.2f m "%(np.abs(lane_offset))+side+" away from the lane center", (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255,255,255), 2)
+    #plt.imshow(result)
+    #plt.show()
     return result
 
     
