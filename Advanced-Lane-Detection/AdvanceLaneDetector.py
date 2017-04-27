@@ -362,6 +362,18 @@ def lane_detection(img, mtx, dist):
     #plt.show()
     return result
 
+def video_pipeline(img):
+    result = lane_detection(img, mtx, dist)
+    return result
+
+# Import everything needed to edit/save/watch video clips
+from moviepy.editor import VideoFileClip
+from IPython.display import HTML
+video_output = 'project_video_result.mp4'
+clip1 = VideoFileClip("project_video.mp4")
+clip_output = clip1.fl_image(video_pipeline) #NOTE: this function expects color images!!
+%time clip_output.write_videofile(video_output, audio=False)
+
     
 
 
